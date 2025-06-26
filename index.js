@@ -10,7 +10,7 @@
 const BASE = "https://fsa-crud-2aa9294fe819.herokuapp.com/api";
 const COHORT = "/2506-Milan"; // Make sure to change this!
 const RESOURCE = "/events";
-const API = BASE + COHORT + RESOURCE;
+const API = `${BASE}${COHORT}/events`;
 
 // === State ===
 let parties = [];
@@ -20,12 +20,12 @@ let selectedParty;
 async function getParties() {
   // TODO
   try {
-    const response = await fetch(API + "/events");
+    const response = await fetch(API);
     const result = await response.json();
     parties = result.data;
     console.log(response);
     console.log(result);
-    // render();
+    render();
   } catch (error) {
     console.error(error);
   }
@@ -35,7 +35,8 @@ async function getParties() {
 async function getParty(id) {
   // TODO
   try {
-    const response = await fetch(API + "/events/" + id);
+    const response = await fetch(`${API}/${id}`);
+
     const result = await response.json();
     selectedParty = result.data;
     render();
@@ -50,13 +51,18 @@ console.log(selectedParty);
 
 /** Artist name that shows more details about the artist when clicked */
 function PartyListItem(party) {
-  // TODO
   const $item = document.createElement("li");
-  $item.innerHTML = `
-  <li><a href="#selected">${party.name}</a></li>
-  `;
-  $item.addEventListener("click", () => getArtist(artist.id));
 
+  if (selectedParty && party.id === selectedParty.id) {
+    $item.classList.add("selected");
+  }
+
+  const $link = document.createElement("a");
+  $link.href = "#selected";
+  $link.textContent = party.name;
+  $link.addEventListener("click", () => getParty(party.id));
+
+  $item.appendChild($link);
   return $item;
 }
 
@@ -65,14 +71,14 @@ function PartyList() {
   // TODO
   const $list = document.createElement("ul");
   $list.classList.add("lineup");
-  const $parties = parties.map(ArtistListItem);
+  const $parties = parties.map(PartyListItem);
   $list.replaceChildren(...$parties);
 
   return $list;
 }
 
 /** Detailed information about the selected artist */
-function ArtistDetails() {
+function PartyDetails() {
   if (!selectedParty) {
     const $p = document.createElement("p");
     $p.textContent = "Please select an artist to learn more.";
@@ -81,7 +87,7 @@ function ArtistDetails() {
 
   // TODO
 
-  const $details = document.createElement("Article");
+  const $details = document.createElement("article");
   $details.innerHTML = /* HTML */ ` <section class="artist">
     <h3>${selectedParty.name} #${selectedParty.id}</h3>
     <figure></figure>
@@ -95,24 +101,23 @@ function ArtistDetails() {
 function render() {
   const $app = document.querySelector("#app");
   $app.innerHTML = `
-    <h1>Fullstack Gala</h1>
-    <main>
-      <section class>
-        <h2>Lineup</h2>
-        <ArtistList></ArtistList>
-      </section>
-      <section id="selected">
-        <h2>Artist Details</h2>
-        <ArtistDetails></ArtistDetails>
-      </section>
-    </main>
-  `;
-  $app.querySelector("ArtistList").replaceWith(ArtistList());
-  $app.querySelector("ArtistDetails").replaceWith(ArtistDetails());
+  <h1>Party Planner</h1>
+  <main>
+    <section id="list">
+      <h2>Upcoming Parties</h2>
+    </section>
+    <section id="selected">
+      <h2>Party Details</h2>
+    </section>
+  </main>
+`;
+
+  $app.querySelector("#list").appendChild(PartyList());
+  $app.querySelector("#selected").appendChild(PartyDetails());
 }
 
 async function init() {
-  await getArtists();
+  await getParties();
   render();
 }
 
